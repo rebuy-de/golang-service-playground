@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"database/sql"
@@ -10,6 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+type Entry struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
 
 func main() {
 	app := cli.NewApp()
@@ -41,7 +48,7 @@ func run(c *cli.Context) {
 	defer con.Close()
 	mustCreateTables(con)
 
-	var err = listenHttp(c.String("http-listen"))
+	var err = listenHttp(c.String("http-listen"), con)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
@@ -83,20 +90,57 @@ func mustCreateTables(con *sql.DB) {
 
 }
 
-/*func createRouter() *httprouter.Router {
-	router := httprouter.New()
-	router.GET("/foo/:name", fooGet)
-	router.PUT("/foo/:name", fooPut)
-	router.DELETE("/foo/:name", fooDelete)
-	router.POST("/foo", fooPost)
-
-	return router
-}*/
-
-func listenHttp(address string) error {
+func listenHttp(address string, db *sql.DB) error {
 	r := gin.Default()
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
+
+	r.GET("/test", func(c *gin.Context) {
+		c.JSON(200, Entry{1, "foo", "bar"})
+	})
+
+	r.GET("/foo/:id", func(c *gin.Context) {
+		var err error
+		var entry = new(Entry)
+		var id string
+
+		id = c.Param("id")
+
+		err = db.QueryRow("SELECT id, name, value FROM mytable WHERE id=?", id).
+			Scan(&entry.ID, &entry.Name, &entry.Value)
+		if err != nil {
+			c.String(500, err.Error())
+		}
+
+		c.JSON(200, entry)
+	})
+
+	r.POST("/foo", func(c *gin.Context) {
+		var err error
+		var entry = new(Entry)
+
+		err = c.Bind(entry)
+		if err != nil {
+			c.String(500, err.Error())
+		}
+
+		var result sql.Result
+		result, err = db.Exec(`INSERT INTO mytable (name, value) VALUES (?, ?)`, entry.Name, entry.Value)
+		if err != nil {
+			c.String(500, err.Error())
+		}
+
+		var id int64
+		id, err = result.LastInsertId()
+		if err != nil {
+			c.String(500, err.Error())
+		}
+
+		c.Header("Location", fmt.Sprintf("/foo/%d", id))
+		c.String(201, "")
+	})
+
 	return r.Run(address)
 }
