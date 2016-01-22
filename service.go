@@ -3,20 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
-
-	"database/sql"
+	"strconv"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 )
-
-type Entry struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
 
 func main() {
 	app := cli.NewApp()
@@ -57,12 +51,12 @@ func run(c *cli.Context) {
 	}
 }
 
-func mustDialMysql(addr string) *sql.DB {
+func mustDialMysql(addr string) gorm.DB {
 	logrus.WithFields(logrus.Fields{
 		"address": addr,
-	}).Info("Connection to MySQL.")
+	}).Info("Connecting to MySQL.")
 
-	var con, err = sql.Open("mysql", addr)
+	var db, err = gorm.Open("mysql", addr)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
@@ -71,26 +65,14 @@ func mustDialMysql(addr string) *sql.DB {
 		os.Exit(1)
 	}
 
-	return con
+	return db
 }
 
-func mustCreateTables(con *sql.DB) {
-	var err error
-
-	_, err = con.Exec(`CREATE TABLE IF NOT EXISTS mytable (
-		id INT(11) PRIMARY KEY AUTO_INCREMENT,
-		name VARCHAR(255) NOT NULL,
-		value VARCHAR(255) NOT NULL);`)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Couldn't create database table.")
-		os.Exit(1)
-	}
-
+func mustCreateTables(db gorm.DB) {
+	db.CreateTable(&Entry{})
 }
 
-func listenHttp(address string, db *sql.DB) error {
+func listenHttp(address string, db gorm.DB) error {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -104,12 +86,13 @@ func listenHttp(address string, db *sql.DB) error {
 	r.GET("/foo/:id", func(c *gin.Context) {
 		var err error
 		var entry = new(Entry)
-		var id string
 
-		id = c.Param("id")
+		entry.ID, err = strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.String(500, err.Error())
+		}
 
-		err = db.QueryRow("SELECT id, name, value FROM mytable WHERE id=?", id).
-			Scan(&entry.ID, &entry.Name, &entry.Value)
+		err = db.First(entry).Error
 		if err != nil {
 			c.String(500, err.Error())
 		}
@@ -126,19 +109,12 @@ func listenHttp(address string, db *sql.DB) error {
 			c.String(500, err.Error())
 		}
 
-		var result sql.Result
-		result, err = db.Exec(`INSERT INTO mytable (name, value) VALUES (?, ?)`, entry.Name, entry.Value)
+		err = db.Create(entry).Error
 		if err != nil {
 			c.String(500, err.Error())
 		}
 
-		var id int64
-		id, err = result.LastInsertId()
-		if err != nil {
-			c.String(500, err.Error())
-		}
-
-		c.Header("Location", fmt.Sprintf("/foo/%d", id))
+		c.Header("Location", fmt.Sprintf("/foo/%d", entry.ID))
 		c.String(201, "")
 	})
 
