@@ -5,6 +5,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/rebuy-de/golang-service-playground/application"
 )
 
 func main() {
@@ -33,14 +34,10 @@ func main() {
 func run(c *cli.Context) {
 	logrus.SetLevel(logrus.DebugLevel)
 
-	var con = mustInitMysql(c.String("mysql-conn"))
-	defer con.Close()
-
-	var err = listenHttp(c.String("http-listen"), con)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("Failed to server HTTP.")
-		os.Exit(1)
+	var app = application.Context{
+		MysqlDsn:   c.String("mysql-conn"),
+		HttpListen: c.String("http-listen"),
 	}
+
+	app.Run()
 }

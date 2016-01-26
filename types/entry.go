@@ -1,4 +1,4 @@
-package main
+package types
 
 type Entry struct {
 	ID    int    `json:"id",sql:"AUTO_INCREMENT"`
