@@ -10,8 +10,6 @@ RUN go get \
 	golang.org/x/net/context \
 	golang.org/x/net/context \
 	github.com/go-sql-driver/mysql \
-	github.com/jinzhu/gorm \
-	github.com/jinzhu/inflection \
 	github.com/lib/pq
 
 RUN mkdir -p /go/src/app

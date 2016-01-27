@@ -6,19 +6,26 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
 	"github.com/rebuy-de/golang-service-playground/types"
 )
 
-func Listen(address string, db gorm.DB) {
-	var ctx = context{
-		&db,
+type FooRepository interface {
+	FindById(id int) (*types.Foo, error)
+	Create(*types.Foo) error
+}
+
+type controller struct {
+	foo FooRepository
+}
+
+func Listen(address string, foo FooRepository) {
+	var ctl = controller{
+		foo,
 	}
 
 	r := gin.Default()
-	r.GET("/foo/:id", ctx.getFooById)
-	r.POST("/foo", ctx.postFoo)
+	r.GET("/foo/:id", ctl.getFooById)
+	r.POST("/foo", ctl.postFoo)
 
 	var err = r.Run(address)
 	if err != nil {
@@ -28,41 +35,38 @@ func Listen(address string, db gorm.DB) {
 	}
 }
 
-type context struct {
-	db *gorm.DB
+func (ctl *controller) getFooById(g *gin.Context) {
+	var err error
+	var foo = new(types.Foo)
+	var id int
+
+	id, err = strconv.Atoi(g.Param("id"))
+	if err != nil {
+		g.String(400, err.Error())
+	}
+
+	foo, err = ctl.foo.FindById(id)
+	if err != nil {
+		g.String(404, err.Error())
+	}
+
+	g.JSON(200, foo)
 }
 
-func (ctx *context) getFooById(g *gin.Context) {
+func (ctl *controller) postFoo(g *gin.Context) {
 	var err error
-	var entry = new(types.Entry)
+	var foo = new(types.Foo)
 
-	entry.ID, err = strconv.Atoi(g.Param("id"))
+	err = g.Bind(foo)
 	if err != nil {
 		g.String(500, err.Error())
 	}
 
-	err = ctx.db.First(entry).Error
+	err = ctl.foo.Create(foo)
 	if err != nil {
-		g.String(500, err.Error())
+		g.String(400, err.Error())
 	}
 
-	g.JSON(200, entry)
-}
-
-func (ctx *context) postFoo(g *gin.Context) {
-	var err error
-	var entry = new(types.Entry)
-
-	err = g.Bind(entry)
-	if err != nil {
-		g.String(500, err.Error())
-	}
-
-	err = ctx.db.Create(entry).Error
-	if err != nil {
-		g.String(500, err.Error())
-	}
-
-	g.Header("Location", fmt.Sprintf("/foo/%d", entry.ID))
+	g.Header("Location", fmt.Sprintf("/foo/%d", foo.ID))
 	g.String(201, "")
 }

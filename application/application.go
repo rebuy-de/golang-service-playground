@@ -1,17 +1,20 @@
 package application
 
 import (
+	"database/sql"
+
 	"github.com/Sirupsen/logrus"
-	"github.com/jinzhu/gorm"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/rebuy-de/golang-service-playground/database"
 	"github.com/rebuy-de/golang-service-playground/http"
-	"github.com/rebuy-de/golang-service-playground/types"
 )
 
 type Context struct {
 	MysqlDsn   string
 	HttpListen string
 
-	gorm gorm.DB
+	db            *sql.DB
+	fooRepository *database.FooRepository
 }
 
 func (c *Context) Run() {
@@ -27,27 +30,31 @@ func (c *Context) initMysql() {
 		"address": c.MysqlDsn,
 	}).Info("Connecting to MySQL.")
 
-	c.gorm, err = gorm.Open("mysql", c.MysqlDsn)
+	c.db, err = sql.Open("mysql", c.MysqlDsn)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error": err,
 			"conn":  c.MysqlDsn,
 		}).Panic("Couldn't open database connection.")
 	}
+
+	c.fooRepository = database.NewFooRepository(c.db)
 }
 
 func (c *Context) createTables() {
-	if !c.gorm.HasTable(&types.Entry{}) {
-		var err = c.gorm.CreateTable(&types.Entry{}).Error
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"error": err,
-				"type":  "Entry",
-			}).Panic("Couldn't create database table connection.")
-		}
+	var err error
+
+	_, err = c.db.Exec(`CREATE TABLE IF NOT EXISTS foo (
+		id INT(11) PRIMARY KEY AUTO_INCREMENT,
+		name VARCHAR(255) NOT NULL,
+		value VARCHAR(255) NOT NULL);`)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Panic("Couldn't create database table.")
 	}
 }
 
 func (c *Context) listenHttp() {
-	http.Listen(c.HttpListen, c.gorm)
+	http.Listen(c.HttpListen, c.fooRepository)
 }
