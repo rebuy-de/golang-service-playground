@@ -13,4 +13,4 @@ httpd:
     command: >
         go-wrapper run
         --http-listen :80
-        --mysql-conn root:my-secret-pw@(test_mysql_1:3306)/foobar
+        --mysql-dsn root:my-secret-pw@(test_mysql_1:3306)/foobar

@@ -2,15 +2,8 @@ FROM golang:1.5
 
 RUN go get \
 	github.com/Sirupsen/logrus \
-	github.com/codegangsta/cli \
-	github.com/gin-gonic/gin \
-	gopkg.in/bluesuncorp/validator.v5 \
-	github.com/manucorporat/sse \
-	github.com/mattn/go-colorable \
-	golang.org/x/net/context \
-	golang.org/x/net/context \
 	github.com/go-sql-driver/mysql \
-	github.com/lib/pq
+	github.com/gin-gonic/gin
 
 RUN mkdir -p /go/src/app
 WORKDIR /go/src/app

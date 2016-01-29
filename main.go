@@ -1,42 +1,28 @@
 package main
 
 import (
-	"os"
+	"flag"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 	"github.com/rebuy-de/golang-service-playground/application"
 )
 
-func main() {
-	app := cli.NewApp()
-	app.Name = "example service"
-	app.Usage = "example golang http service"
-	app.Action = run
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "http-listen",
-			Value:  ":8080",
-			Usage:  "HTTP server listen interface and port.",
-			EnvVar: "HTTP_LISTEN",
-		},
-		cli.StringFlag{
-			Name:   "mysql-conn",
-			Value:  "localhost",
-			Usage:  "[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]",
-			EnvVar: "MYSQL_CONN",
-		},
-	}
-
-	app.Run(os.Args)
+type Config struct {
+	HttpListen string
+	MysqlDsn   string
 }
 
-func run(c *cli.Context) {
-	logrus.SetLevel(logrus.DebugLevel)
+func main() {
+	var config Config
+
+	flag.StringVar(&config.HttpListen, "http-listen", ":8080",
+		"HTTP server listen interface and port.")
+	flag.StringVar(&config.MysqlDsn, "mysql-dsn", "localhost",
+		"[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]")
+	flag.Parse()
 
 	var app = application.Context{
-		MysqlDsn:   c.String("mysql-conn"),
-		HttpListen: c.String("http-listen"),
+		HttpListen: config.HttpListen,
+		MysqlDsn:   config.MysqlDsn,
 	}
 
 	app.Run()
