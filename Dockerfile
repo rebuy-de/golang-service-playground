@@ -3,7 +3,7 @@ FROM golang:1.5
 RUN go get \
 	github.com/Sirupsen/logrus \
 	github.com/go-sql-driver/mysql \
-	github.com/gin-gonic/gin
+	github.com/julienschmidt/httprouter
 
 RUN mkdir -p /go/src/app
 WORKDIR /go/src/app

@@ -1,11 +1,14 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"strconv"
 
-	"github.com/Sirupsen/logrus"
-	"github.com/gin-gonic/gin"
+	"github.com/julienschmidt/httprouter"
 	"github.com/rebuy-de/golang-service-playground/types"
 )
 
@@ -23,50 +26,50 @@ func Listen(address string, foo FooRepository) {
 		foo,
 	}
 
-	r := gin.Default()
-	r.GET("/foo/:id", ctl.getFooById)
-	r.POST("/foo", ctl.postFoo)
+	var router = httprouter.New()
+	router.GET("/foo/:id", ctl.getFooById)
+	router.POST("/foo", ctl.postFoo)
 
-	var err = r.Run(address)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"error": err,
-		}).Panic("Failed to serve HTTP.")
-	}
+	log.Panic(http.ListenAndServe(address, router))
 }
 
-func (ctl *controller) getFooById(g *gin.Context) {
+func (ctl *controller) getFooById(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var err error
 	var foo = new(types.Foo)
 	var id int
 
-	id, err = strconv.Atoi(g.Param("id"))
+	id, err = strconv.Atoi(p.ByName("id"))
 	if err != nil {
-		g.String(400, err.Error())
+		w.WriteHeader(400)
+		io.WriteString(w, err.Error())
 	}
 
 	foo, err = ctl.foo.FindById(id)
 	if err != nil {
-		g.String(404, err.Error())
+		w.WriteHeader(404)
+		io.WriteString(w, err.Error())
 	}
 
-	g.JSON(200, foo)
+	w.WriteHeader(200)
+	_ = json.NewEncoder(w).Encode(foo)
 }
 
-func (ctl *controller) postFoo(g *gin.Context) {
+func (ctl *controller) postFoo(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var err error
 	var foo = new(types.Foo)
 
-	err = g.Bind(foo)
+	err = json.NewDecoder(r.Body).Decode(foo)
 	if err != nil {
-		g.String(500, err.Error())
+		w.WriteHeader(500)
+		io.WriteString(w, err.Error())
 	}
 
 	err = ctl.foo.Create(foo)
 	if err != nil {
-		g.String(400, err.Error())
+		w.WriteHeader(400)
+		io.WriteString(w, err.Error())
 	}
 
-	g.Header("Location", fmt.Sprintf("/foo/%d", foo.ID))
-	g.String(201, "")
+	w.Header().Set("Location", fmt.Sprintf("/foo/%d", foo.ID))
+	w.WriteHeader(200)
 }
