@@ -1,5 +1,5 @@
 mysql:
-    image: mysql
+    build: resources/docker/mysql
     restart: always
     environment:
         MYSQL_ROOT_PASSWORD: my-secret-pw
