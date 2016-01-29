@@ -2,11 +2,12 @@ package application
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rebuy-de/golang-service-playground/database"
-	"github.com/rebuy-de/golang-service-playground/http"
+	"github.com/rebuy-de/golang-service-playground/web"
 )
 
 type Context struct {
@@ -41,5 +42,7 @@ func (c *Context) initMysql() {
 }
 
 func (c *Context) listenHttp() {
-	http.Listen(c.HttpListen, c.fooRepository)
+	var handler = web.Handler(c.fooRepository)
+
+	http.ListenAndServe(c.HttpListen, handler)
 }

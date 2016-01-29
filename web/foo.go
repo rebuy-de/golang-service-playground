@@ -1,10 +1,9 @@
-package http
+package web
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -21,7 +20,7 @@ type controller struct {
 	foo FooRepository
 }
 
-func Listen(address string, foo FooRepository) {
+func Handler(foo FooRepository) http.Handler {
 	var ctl = controller{
 		foo,
 	}
@@ -30,7 +29,7 @@ func Listen(address string, foo FooRepository) {
 	router.GET("/foo/:id", ctl.getFooById)
 	router.POST("/foo", ctl.postFoo)
 
-	log.Panic(http.ListenAndServe(address, router))
+	return router
 }
 
 func (ctl *controller) getFooById(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
