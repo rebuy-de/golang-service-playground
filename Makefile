@@ -6,10 +6,12 @@ COMPOSE=eval $$(docker-machine env $(MACHINE_NAME)) && docker-compose --x-networ
 
 HOST=$(shell docker-machine ip $(MACHINE_NAME))
 
+export GO15VENDOREXPERIMENT=1
+
 all: deps build up
 
 deps:
-	go get ./...
+	glide install
 
 build:
 	$(COMPOSE) build
