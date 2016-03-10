@@ -12,7 +12,7 @@ Playground for evaluating proper golang http service structure
 ## Build
 
 1. clone repo
-2. install [glide](https://github.com/Masterminds/glide): `go install github.com/Masterminds/glide
+2. install [glide](https://github.com/Masterminds/glide): `go install github.com/Masterminds/glide`
 3. install dependenvies: `glide install`
 4. build: `go build`
 

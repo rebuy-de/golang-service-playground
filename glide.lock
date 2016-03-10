@@ -1,21 +1,14 @@
-hash: ee62a5e449e61150e2d08fa3826ac17ae699180c3ada374fb207b45899f5c866
-updated: 2016-02-20T14:45:05.962639465+01:00
+hash: 976dec7a58149be24c3c18a6b4be4f1b9960e0cdc5ac51e854581d81d29044e3
+updated: 2016-03-10T11:13:03.486718334+01:00
 imports:
 - name: github.com/go-sql-driver/mysql
-  version: 1309049fd598c1faa0290fd70ab1afde2b6df0f9
+  version: 0f2db9e6c9cff80a97ca5c2c5096242cc1554e16
 - name: github.com/julienschmidt/httprouter
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
-- name: github.com/rebuy-de/golang-service-playground
-  version: 579918ed8821cddf5f27ee2328bc6cfe15070f73
-  subpackages:
-  - application
-  - database
-  - web
-  - types
 - name: github.com/Sirupsen/logrus
-  version: 57cce1ed6103dce7791881d3e69e55f90d986aa5
+  version: 219c8cb75c258c552e999735be6df753ffc7afdc
 - name: golang.org/x/sys
-  version: 50c6bc5e4292a1d4e65c6e9be5f53be28bcbe28e
+  version: 7a56174f0086b32866ebd746a794417edbc678a1
   subpackages:
   - unix
 devImports: []
