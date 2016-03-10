@@ -13,11 +13,14 @@ Playground for evaluating proper golang http service structure
 
 1. clone repo
 2. install [glide](https://github.com/Masterminds/glide): `go install github.com/Masterminds/glide`
-3. install dependenvies: `glide install`
+3. install dependencies: `glide install`
 4. build: `go build`
 
+## Run on Docker
+
+1. `make`
 
 ## Update dependencies
 
-1. `glide up`
+1. `glide update`
 
