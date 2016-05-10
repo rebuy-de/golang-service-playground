@@ -1,26 +1,20 @@
 # golang-service-playground
 Playground for evaluating proper golang http service structure
 
-## Environment
+## Requirements
 
-* Glide needs Golang vendoring experiment enabled 
-  + you need Golang version `>=1.5`
-  +`export GO15VENDOREXPERIMENT=1`
-* project source must be cloned to `${GOPATH}/src/github.com/rebuy-de/golang-service-playground`
-
+* `go` >= `1.6` for building (https://golang.org/)
+* `fpm` for packaging (https://github.com/jordansissel/fpm)
+* Docker for running and testing
 
 ## Build
 
-1. clone repo
-2. install [glide](https://github.com/Masterminds/glide): `go install github.com/Masterminds/glide`
-3. install dependencies: `glide install`
-4. build: `go build`
+1. clone repo into `${GOPATH}/src/github.com/rebuy-de/golang-service-playground`
+2. `hack/build.sh`
 
 ## Run on Docker
 
-1. `make`
+1. clone repo into `${GOPATH}/src/github.com/rebuy-de/golang-service-playground`
+2. `hack/docker.sh`
 
-## Update dependencies
-
-1. `glide update`
 
