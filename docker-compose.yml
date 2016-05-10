@@ -1,0 +1,16 @@
+mysql:
+    build: resources/docker/mysql
+    restart: always
+    environment:
+        MYSQL_ROOT_PASSWORD: my-secret-pw
+        MYSQL_DATABASE: foobar
+
+httpd:
+    build: .
+    restart: always
+    ports:
+        - "80:80"
+    command: >
+        go-wrapper run
+        --http-listen :80
+        --mysql-dsn root:my-secret-pw@(test_mysql_1:3306)/foobar
